@@ -1,55 +1,52 @@
 package com.example.cotirovki.model;
 
+import lombok.*;
 
-
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Data;
-import lombok.NoArgsConstructor;
 
 import javax.persistence.*;
 import java.math.BigDecimal;
 
+@Builder
 @Entity
-
+@Getter
+@Setter
+@ToString
 @AllArgsConstructor
 @NoArgsConstructor
-@Builder
+@Table(name = "quote")
+@Data
 public class Quote {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name="id")
-    private Integer id;
+    @Column(name = "id")
+    private Long id;
 
     @Column(name = "isin")
     private String isin;
 
-    @Column(name = "BID")
+    @Column(name = "bid")
     private BigDecimal bid;
 
-    @Column(name = "ASK")
+    @Column(name = "ask")
     private BigDecimal ask;
 
     @Column(name = "elvl")
     private BigDecimal elvl;
 
+    @Column(name = "is_actual")
+    private boolean isActual;
+
     public Quote(String isin, BigDecimal bid, BigDecimal ask) {
         this.isin = isin;
         this.bid = bid;
         this.ask = ask;
-        if(this.elvl == null || (bid.compareTo(this.elvl) == 1)) {
-            this.elvl = bid;
-        }
-        if(bid == null || (ask.compareTo(this.elvl) == -1)) {
-            this.elvl = ask;
-        }
     }
 
-    public Integer getId() {
+    public Long getId() {
         return id;
     }
 
-    public void setId(Integer id) {
+    public void setId(Long id) {
         this.id = id;
     }
 
@@ -85,14 +82,11 @@ public class Quote {
         this.elvl = elvl;
     }
 
-    @Override
-    public String toString() {
-        return "Quote{" +
-                "id=" + id +
-                ", isin='" + isin + '\'' +
-                ", bid=" + bid +
-                ", ask=" + ask +
-                ", elvl=" + elvl +
-                '}';
+    public boolean isActual() {
+        return isActual;
+    }
+
+    public void setActual(boolean actual) {
+        isActual = actual;
     }
 }

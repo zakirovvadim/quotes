@@ -1,0 +1,8 @@
+# Сервис для сохранения котировок и получения elvl по инструментам (бумагам) REST API.
+# Конфигурация запуска БД для работы сервиса:
+
+# <spring.datasource.url=jdbc:postgresql://localhost:5432/postgres
+# spring.datasource.username=postgres
+# spring.datasource.password=postgres
+# spring.jpa.generate-ddl=true>
+

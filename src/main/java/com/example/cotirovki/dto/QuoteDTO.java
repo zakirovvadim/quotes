@@ -1,24 +1,17 @@
-package com.example.cotirovki.model.dto;
+package com.example.cotirovki.dto;
 
-import javax.persistence.Column;
-import javax.persistence.Id;
+import lombok.Data;
+
 import java.math.BigDecimal;
-
+@Data
 public class QuoteDTO {
-    @Id
-    @Column(name="id")
+
     private Integer id;
-    @Column(name = "isin")
     private String isin;
-
-    @Column(name = "bid")
     private BigDecimal bid;
-
-    @Column(name = "ask")
     private BigDecimal ask;
-
-    @Column(name = "elvl")
     private BigDecimal elvl;
+    private boolean isActual;
 
     public Integer getId() {
         return id;

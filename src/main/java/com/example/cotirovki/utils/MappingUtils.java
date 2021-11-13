@@ -1,7 +1,6 @@
 package com.example.cotirovki.utils;
-
+import com.example.cotirovki.dto.QuoteDTO;
 import com.example.cotirovki.model.Quote;
-import com.example.cotirovki.model.dto.QuoteDTO;
 import org.springframework.stereotype.Service;
 
 @Service
