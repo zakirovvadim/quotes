@@ -1,4 +1,4 @@
-package com.example.cotirovki.exceptions;
+package ru.vadim.quotes.exceptions;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;

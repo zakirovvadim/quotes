@@ -1,6 +1,7 @@
-package com.example.cotirovki.repository;
+package ru.vadim.quotes.repository;
 
-import com.example.cotirovki.model.Quote;
+import org.springframework.stereotype.Component;
+import ru.vadim.quotes.model.Quote;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 
@@ -10,6 +11,7 @@ import org.springframework.stereotype.Repository;
 import java.util.Optional;
 
 @Repository
+@Component
 public interface QuotesRepository extends JpaRepository<Quote, Long> {
     Optional<Quote> findByIsin(String isin);
 

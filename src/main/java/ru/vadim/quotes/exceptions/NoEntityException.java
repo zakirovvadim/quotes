@@ -1,4 +1,4 @@
-package com.example.cotirovki.exceptions;
+package ru.vadim.quotes.exceptions;
 
 public class NoEntityException extends RuntimeException {
     public NoEntityException(String message) {

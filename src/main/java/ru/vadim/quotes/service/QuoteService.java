@@ -1,18 +1,16 @@
-package com.example.cotirovki.service;
+package ru.vadim.quotes.service;
 
 
-import com.example.cotirovki.dto.QuoteDTO;
-import com.example.cotirovki.exceptions.NoEntityException;
-import com.example.cotirovki.exceptions.ValidationErrorException;
-import com.example.cotirovki.model.Quote;
-import com.example.cotirovki.repository.QuotesRepository;
-import com.example.cotirovki.utils.MappingUtils;
+import ru.vadim.quotes.dto.QuoteDTO;
+import ru.vadim.quotes.exceptions.NoEntityException;
+import ru.vadim.quotes.exceptions.ValidationErrorException;
+import ru.vadim.quotes.mappers.QuoteMapper;
+import ru.vadim.quotes.model.Quote;
+import ru.vadim.quotes.repository.QuotesRepository;
 import lombok.AllArgsConstructor;
-import lombok.Data;
-import lombok.NoArgsConstructor;
-import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
+import java.math.BigDecimal;
 import java.util.List;
 import java.util.Optional;
 
@@ -21,23 +19,25 @@ import java.util.Optional;
 public class QuoteService {
     private final QuotesRepository repository;
 
-    public List<Quote> findAll() {
-        return repository.findAll();
+    public List<QuoteDTO> findAll() {
+        List<Quote> quoteList = repository.findAll();
+        List<QuoteDTO> dtoList = QuoteMapper.INSTANCE.map(quoteList);
+        return dtoList;
     }
 
     public QuoteDTO findByIsin(String isin) {
         Quote quote = null;
-        Optional<Quote> optionalQuote = repository.findByIsin(isin);
+        Optional<Quote> optionalQuote = repository.findByIsinWithActualTrue(isin);
         if (optionalQuote.isPresent()) {
             quote = optionalQuote.get();
         } else {
             throw new NoEntityException("There is no quote with ISIN = " + isin + " in Data");
         }
-
-        QuoteDTO dto = new MappingUtils().mapToDto(quote);
+        QuoteDTO dto = QuoteMapper.INSTANCE.map(quote);
         return dto;
     }
-// не устанавливает айди
+
+    // не устанавливает айди
     public void save(Quote newQuote) {
         if ((newQuote.getBid().compareTo(newQuote.getAsk()) == -1) && newQuote.getIsin().length() == 12) {
             Quote currentQuote = null;
@@ -48,10 +48,10 @@ public class QuoteService {
                 newQuote.setActual(true);
                 newQuote.setElvl(newQuote.getBid());
                 saveWithCalculateElvl(newQuote, currentQuote);
-            } else  {
+            } else {
                 newQuote.setActual(true);
                 newQuote.setElvl(newQuote.getBid());
-                repository.save(newQuote);
+                saveWithCalculateElvl(newQuote);
             }
 
         } else {
@@ -60,12 +60,31 @@ public class QuoteService {
     }
 
     public void saveWithCalculateElvl(Quote newQuote, Quote currentQuote) {
-        if ((newQuote.getAsk().compareTo(currentQuote.getElvl()) == -1) || newQuote.getBid() == null) {
+        if ((newQuote.getAsk().compareTo(currentQuote.getElvl()) == -1)
+                || newQuote.getBid() == null) {
             newQuote.setElvl(currentQuote.getAsk());
             repository.save(newQuote);
             return;
-        } else if ((newQuote.getBid().compareTo(currentQuote.getElvl()) == 1) || newQuote.getElvl() == null) {
+        } else if ((newQuote.getBid().compareTo(currentQuote.getElvl()) == 1)
+                || newQuote.getElvl() == null) {
             newQuote.setElvl(currentQuote.getBid());
+            repository.save(newQuote);
+            return;
+        }
+        repository.save(newQuote);
+    }
+
+    public void saveWithCalculateElvl(Quote newQuote) {
+        if ((newQuote.getAsk().compareTo(newQuote.getElvl()) < 0)
+                || newQuote.getBid() == null
+                || newQuote.getBid().compareTo(new BigDecimal(0)) == 0) {
+            newQuote.setElvl(newQuote.getAsk());
+            repository.save(newQuote);
+            return;
+        } else if ((newQuote.getBid().compareTo(newQuote.getElvl()) > 0)
+                || newQuote.getElvl() == null
+                || newQuote.getElvl().compareTo(new BigDecimal(0)) == 0) {
+            newQuote.setElvl(newQuote.getBid());
             repository.save(newQuote);
             return;
         }

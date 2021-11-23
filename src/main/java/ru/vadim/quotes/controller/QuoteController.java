@@ -1,12 +1,8 @@
-package com.example.cotirovki.controller;
+package ru.vadim.quotes.controller;
 
-import com.example.cotirovki.dto.QuoteDTO;
-import com.example.cotirovki.exceptions.NoEntityException;
-import com.example.cotirovki.model.Quote;
-import com.example.cotirovki.service.QuoteService;
-import lombok.Data;
-import lombok.NoArgsConstructor;
-import lombok.RequiredArgsConstructor;
+import ru.vadim.quotes.dto.QuoteDTO;
+import ru.vadim.quotes.model.Quote;
+import ru.vadim.quotes.service.QuoteService;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -14,8 +10,7 @@ import org.springframework.web.bind.annotation.*;
 import java.util.List;
 
 @RestController
-@RequestMapping("/api")
-
+@RequestMapping("/api/quotes")
 public class QuoteController {
     private final QuoteService service;
 
@@ -23,22 +18,21 @@ public class QuoteController {
         this.service = service;
     }
 
-    @GetMapping(value = "/quotes")
-    public ResponseEntity<List<Quote>> findAllProf() {
-        List<Quote> professorList = service.findAll();
-
-        return professorList != null && !professorList.isEmpty()
-                ? new ResponseEntity<>(professorList, HttpStatus.OK)
+    @GetMapping(value = "")
+    public ResponseEntity<List<QuoteDTO>> findAllQuotes() {
+        List<QuoteDTO> quoteList = service.findAll();
+        return quoteList != null
+                ? new ResponseEntity<>(quoteList, HttpStatus.OK)
                 : new ResponseEntity<>(HttpStatus.NOT_FOUND);
     }
 
-    @PostMapping(value = "/quotes")
+    @PostMapping(value = "")
     public ResponseEntity<?> createQuote(@RequestBody Quote quote) {
         service.save(quote);
         return new ResponseEntity<>(HttpStatus.OK);
     }
 
-    @GetMapping(value = "/quotes/{isin}")
+    @GetMapping(value = "/{isin}")
     public ResponseEntity<QuoteDTO> getQuote(@PathVariable(name = "isin") String isin) {
         QuoteDTO quoteDto = service.findByIsin(isin);
 
