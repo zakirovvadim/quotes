@@ -1,7 +1,11 @@
 package ru.vadim.quotes;
 
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.DisplayName;
 import org.springframework.test.context.jdbc.Sql;
-import ru.vadim.quotes.controller.QuoteController;
+import org.springframework.test.web.servlet.result.MockMvcResultMatchers;
+import ru.vadim.quotes.dto.QuoteDto;
+import ru.vadim.quotes.mappers.QuoteMapper;
 import ru.vadim.quotes.model.Quote;
 import ru.vadim.quotes.repository.QuotesRepository;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -12,7 +16,6 @@ import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMock
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
-import ru.vadim.quotes.service.QuoteService;
 
 import java.math.BigDecimal;
 import java.util.Arrays;
@@ -26,63 +29,76 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @Sql(value = {"/create-quote-before.sql"}, executionPhase = Sql.ExecutionPhase.BEFORE_TEST_METHOD)
 @Sql(value = {"/create-quote-after.sql"}, executionPhase = Sql.ExecutionPhase.AFTER_TEST_METHOD)
 public class QuoteControllerTest {
+
+    public static final String API_QUOTES = "/api/quotes/";
+
+    public static final String ISIN_QUOTE_ONE = "RU000A0JX0K9";
+    public static final String ISIN_QUOTE_TWO = "RU000A0JX0K1";
+
+    public static final BigDecimal BID_QUOTE_ONE = BigDecimal.valueOf(106.3);
+    public static final BigDecimal BID_QUOTE_TWO = BigDecimal.valueOf(106.3);
+
+    public static final BigDecimal ASK_QUOTE_ONE = BigDecimal.valueOf(108.5);
+    public static final BigDecimal ASK_QUOTE_TWO = BigDecimal.valueOf(108.5);
     @Autowired
     private MockMvc mockMvc;
     @Autowired
     private QuotesRepository repository;
     @Autowired
     private ObjectMapper objectMapper;
+    private QuoteMapper quoteMapper;
 
     @AfterEach
     public void resetDb() {
         repository.deleteAll();
     }
 
-//    private Quote createTestQuote(String isin, BigDecimal bid, BigDecimal ask) {
-//        Quote quote = new Quote(isin, bid, ask);
-//        return repository.save(quote);
-//    }
-
-
     @Test
     void getList_thenReturnCorrect() throws Exception {
-        Quote quote = new Quote("RU000A0JX0K2", new BigDecimal("106.2"), new BigDecimal("107.4"));
-
-        mockMvc.perform(post("/api/quotes").content(objectMapper.writeValueAsString(quote)).contentType(MediaType.APPLICATION_JSON))
+        mockMvc.perform(post(API_QUOTES)
+                        .content(objectMapper.writeValueAsString(prepareQuote()))
+                        .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk());
     }
 
     @Test
     void givenQuoteByIsin_whenExistingQuote_thenStatus200andQuoteReturned() throws Exception {
-        String isin = "RU000A0JX0K9";
 
-                mockMvc.perform(
-                get("/api/quotes/{isin}", isin))
+        var result = mockMvc.perform(
+                        get(API_QUOTES + ISIN_QUOTE_ONE))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.isin").value(isin))
-                .andExpect(jsonPath("$.bid").value(106.3))
-                .andExpect(jsonPath("$.ask").value(108.5))
-                .andExpect(jsonPath("$.elvl").value(106.3)
-                );
+                .andReturn();
+        Assertions.assertEquals(objectMapper.writeValueAsString(prepareQuote()),
+                result.getResponse().getContentAsString());
 
     }
 
     @Test
+    @DisplayName("")
     void givenQuotes_whenGetQuotes_thenGetList() throws Exception {
-        Quote quote1 = new Quote("RU000A0JX0K9", new BigDecimal("106.3"), new BigDecimal("108.5"));
-        Quote quote2 = new Quote("RU000A0JX0K1", new BigDecimal("105.6"), new BigDecimal("107.8"));
+        Quote quote1 = new Quote(ISIN_QUOTE_ONE, BID_QUOTE_ONE, ASK_QUOTE_ONE);
+        Quote quote2 = new Quote(ISIN_QUOTE_TWO, BID_QUOTE_TWO, ASK_QUOTE_TWO);
         quote1.setId(1L);
-        quote1.setElvl(new BigDecimal(106.3));
+        quote1.setElvl(BID_QUOTE_ONE);
         quote1.setActual(true);
         quote2.setId(2L);
-        quote2.setElvl(new BigDecimal(105.6));
+        quote2.setElvl(BID_QUOTE_TWO);
         quote2.setActual(true);
 
-        mockMvc.perform(
-                get("/api/quotes"))
+        mockMvc.perform(get(API_QUOTES))
                 .andExpect(status().isOk())
-                .andExpect(content().json(objectMapper.writeValueAsString(Arrays.asList(quote1, quote2)))
+                .andExpect(MockMvcResultMatchers.content().json(
+                        objectMapper.writeValueAsString(Arrays.asList(quote1, quote2)))
                 );
     }
 
+    private QuoteDto prepareQuote() {
+
+        return QuoteDto.builder()
+                .isin(ISIN_QUOTE_ONE)
+                .bid(BID_QUOTE_ONE)
+                .ask(ASK_QUOTE_ONE)
+                .elvl(BID_QUOTE_ONE)
+                .build();
+    }
 }

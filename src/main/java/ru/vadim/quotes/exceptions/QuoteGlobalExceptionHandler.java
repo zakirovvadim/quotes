@@ -8,16 +8,30 @@ import org.springframework.web.bind.annotation.ExceptionHandler;
 @ControllerAdvice
 public class QuoteGlobalExceptionHandler {
 
-    @ExceptionHandler
-    public ResponseEntity<QuoteIncorrecData> handlerException(NoEntityException exception) {
-        QuoteIncorrecData data = new QuoteIncorrecData();
+    /**
+
+     * @param exception
+
+     * @return
+
+     */
+    @ExceptionHandler(NoEntityException.class)
+    public ResponseEntity<QuoteErrorData> handlerException(NoEntityException exception) {
+        QuoteErrorData data = new QuoteErrorData();
         data.setInfo(exception.getMessage());
-        return new ResponseEntity<>(data, HttpStatus.NOT_FOUND);
+        return new ResponseEntity<>(data, HttpStatus.NO_CONTENT);
     }
 
-    @ExceptionHandler
-    public  ResponseEntity<QuoteIncorrecData> handlerException(ValidationErrorException exception) {
-        QuoteIncorrecData data = new QuoteIncorrecData();
+    /**
+
+     * @param exception
+
+     * @return
+
+     */
+    @ExceptionHandler(ValidationErrorException.class)
+    public  ResponseEntity<QuoteErrorData> handlerException(ValidationErrorException exception) {
+        QuoteErrorData data = new QuoteErrorData();
         data.setInfo(exception.getMessage());
         return new ResponseEntity<>(data, HttpStatus.FORBIDDEN);
     }

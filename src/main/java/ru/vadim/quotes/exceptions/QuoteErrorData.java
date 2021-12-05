@@ -1,9 +1,9 @@
 package ru.vadim.quotes.exceptions;
 
-public class QuoteIncorrecData {
+public class QuoteErrorData {
     private String info;
 
-    public QuoteIncorrecData() {
+    public QuoteErrorData() {
     }
 
     public String getInfo() {

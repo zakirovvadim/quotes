@@ -1,7 +1,8 @@
 package ru.vadim.quotes.service;
 
 
-import ru.vadim.quotes.dto.QuoteDTO;
+import lombok.RequiredArgsConstructor;
+import ru.vadim.quotes.dto.QuoteDto;
 import ru.vadim.quotes.exceptions.NoEntityException;
 import ru.vadim.quotes.exceptions.ValidationErrorException;
 import ru.vadim.quotes.mappers.QuoteMapper;
@@ -15,17 +16,18 @@ import java.util.List;
 import java.util.Optional;
 
 @Service
-@AllArgsConstructor
+@RequiredArgsConstructor
 public class QuoteService {
     private final QuotesRepository repository;
+    private final QuoteMapper mapper;
 
-    public List<QuoteDTO> findAll() {
+    public List<QuoteDto> findAll() {
         List<Quote> quoteList = repository.findAll();
-        List<QuoteDTO> dtoList = QuoteMapper.INSTANCE.map(quoteList);
+        List<QuoteDto> dtoList = mapper.map(quoteList);
         return dtoList;
     }
 
-    public QuoteDTO findByIsin(String isin) {
+    public QuoteDto findByIsin(String isin) {
         Quote quote = null;
         Optional<Quote> optionalQuote = repository.findByIsinWithActualTrue(isin);
         if (optionalQuote.isPresent()) {
@@ -33,11 +35,10 @@ public class QuoteService {
         } else {
             throw new NoEntityException("There is no quote with ISIN = " + isin + " in Data");
         }
-        QuoteDTO dto = QuoteMapper.INSTANCE.map(quote);
+        QuoteDto dto = mapper.map(quote);
         return dto;
     }
 
-    // не устанавливает айди
     public void save(Quote newQuote) {
         if ((newQuote.getBid().compareTo(newQuote.getAsk()) == -1) && newQuote.getIsin().length() == 12) {
             Quote currentQuote = null;
@@ -47,11 +48,11 @@ public class QuoteService {
                 currentQuote.setActual(false); // не сохраняет изменение в бд
                 newQuote.setActual(true);
                 newQuote.setElvl(newQuote.getBid());
-                saveWithCalculateElvl(newQuote, currentQuote);
+                saveWithCalculateQuoteValue(newQuote, currentQuote);
             } else {
                 newQuote.setActual(true);
                 newQuote.setElvl(newQuote.getBid());
-                saveWithCalculateElvl(newQuote);
+                saveWithCalculateQuoteValue(newQuote);
             }
 
         } else {
@@ -59,14 +60,12 @@ public class QuoteService {
         }
     }
 
-    public void saveWithCalculateElvl(Quote newQuote, Quote currentQuote) {
-        if ((newQuote.getAsk().compareTo(currentQuote.getElvl()) == -1)
-                || newQuote.getBid() == null) {
+    public void saveWithCalculateQuoteValue(Quote newQuote, Quote currentQuote) {
+        if (isAskOfNewQuoteMoreThanCurrentQuoteValueOrNewBidIsNull(newQuote, currentQuote)) {
             newQuote.setElvl(currentQuote.getAsk());
             repository.save(newQuote);
             return;
-        } else if ((newQuote.getBid().compareTo(currentQuote.getElvl()) == 1)
-                || newQuote.getElvl() == null) {
+        } else if (isBidOfNewQuoteMoreThanQuoteValueOfCurrentQuoteOrQuoteValueOfNewQuoteIsNull(newQuote, currentQuote)) {
             newQuote.setElvl(currentQuote.getBid());
             repository.save(newQuote);
             return;
@@ -74,20 +73,52 @@ public class QuoteService {
         repository.save(newQuote);
     }
 
-    public void saveWithCalculateElvl(Quote newQuote) {
-        if ((newQuote.getAsk().compareTo(newQuote.getElvl()) < 0)
-                || newQuote.getBid() == null
-                || newQuote.getBid().compareTo(new BigDecimal(0)) == 0) {
+    public void saveWithCalculateQuoteValue(Quote newQuote) {
+        if (isAskMoreThanBidOrBidIsNullOrZero(newQuote)) {
             newQuote.setElvl(newQuote.getAsk());
             repository.save(newQuote);
             return;
-        } else if ((newQuote.getBid().compareTo(newQuote.getElvl()) > 0)
-                || newQuote.getElvl() == null
-                || newQuote.getElvl().compareTo(new BigDecimal(0)) == 0) {
+        } else if (isBidMoreThanQuoteValueOrQuoteValueIsNullOrZero(newQuote)) {
             newQuote.setElvl(newQuote.getBid());
             repository.save(newQuote);
             return;
         }
         repository.save(newQuote);
+    }
+
+    public boolean isAskMoreThanBidOrBidIsNullOrZero(Quote newQuote) {
+        if ((newQuote.getAsk().compareTo(newQuote.getElvl()) < 0)
+                || newQuote.getBid() == null
+                || newQuote.getBid().compareTo(new BigDecimal(0)) == 0) {
+            return true;
+        }
+        else {return false;}
+    }
+    public boolean isBidMoreThanQuoteValueOrQuoteValueIsNullOrZero(Quote newQuote) {
+        if ((newQuote.getBid().compareTo(newQuote.getElvl()) > 0)
+                || newQuote.getElvl() == null
+                || newQuote.getElvl().compareTo(new BigDecimal(0)) == 0) {
+            return true;
+        } else {
+            return false;
+        }
+    }
+
+    public boolean isAskOfNewQuoteMoreThanCurrentQuoteValueOrNewBidIsNull(Quote newQuote, Quote currentQuote) {
+        if ((newQuote.getAsk().compareTo(currentQuote.getElvl()) < 0)
+                || newQuote.getBid() == null) {
+            return true;
+        } else {
+            return false;
+        }
+    }
+    //
+    public boolean isBidOfNewQuoteMoreThanQuoteValueOfCurrentQuoteOrQuoteValueOfNewQuoteIsNull(Quote newQuote, Quote currentQuote){
+        if ((newQuote.getBid().compareTo(currentQuote.getElvl()) > 0)
+                || newQuote.getElvl() == null) {
+            return true;
+        } else {
+            return false;
+        }
     }
 }

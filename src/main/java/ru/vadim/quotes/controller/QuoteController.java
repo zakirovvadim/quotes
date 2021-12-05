@@ -1,6 +1,10 @@
 package ru.vadim.quotes.controller;
 
-import ru.vadim.quotes.dto.QuoteDTO;
+import io.swagger.annotations.ApiResponse;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
+import lombok.RequiredArgsConstructor;
+import ru.vadim.quotes.dto.QuoteDto;
 import ru.vadim.quotes.model.Quote;
 import ru.vadim.quotes.service.QuoteService;
 import org.springframework.http.HttpStatus;
@@ -11,19 +15,16 @@ import java.util.List;
 
 @RestController
 @RequestMapping("/api/quotes")
+@RequiredArgsConstructor
 public class QuoteController {
     private final QuoteService service;
 
-    public QuoteController(QuoteService service) {
-        this.service = service;
-    }
-
     @GetMapping(value = "")
-    public ResponseEntity<List<QuoteDTO>> findAllQuotes() {
-        List<QuoteDTO> quoteList = service.findAll();
+    public ResponseEntity<List<QuoteDto>> findAllQuotes() {
+        List<QuoteDto> quoteList = service.findAll();
         return quoteList != null
                 ? new ResponseEntity<>(quoteList, HttpStatus.OK)
-                : new ResponseEntity<>(HttpStatus.NOT_FOUND);
+                : new ResponseEntity<>(HttpStatus.NO_CONTENT);
     }
 
     @PostMapping(value = "")
@@ -32,12 +33,18 @@ public class QuoteController {
         return new ResponseEntity<>(HttpStatus.OK);
     }
 
+    @Operation(description = "Получение списка всех котировок",
+            responses = {@ApiResponse(responseCode = "200", description = "Получение котировки"),
+                    @ApiResponse(responseCode = "404", description = "Котировка не найдена")})
     @GetMapping(value = "/{isin}")
-    public ResponseEntity<QuoteDTO> getQuote(@PathVariable(name = "isin") String isin) {
-        QuoteDTO quoteDto = service.findByIsin(isin);
+    public ResponseEntity<QuoteDto> getQuote(
+            @PathVariable(name = "isin")
+            @Parameter(description = "Международный идентификационный код ценной бумаги")
+                    String isin) {
+        QuoteDto quoteDto = service.findByIsin(isin);
 
         return quoteDto != null
                 ? new ResponseEntity<>(quoteDto, HttpStatus.OK)
-                : new ResponseEntity<>(HttpStatus.NOT_FOUND);
+                : new ResponseEntity<>(HttpStatus.NO_CONTENT);
     }
 }
