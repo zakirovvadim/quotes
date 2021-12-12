@@ -8,7 +8,6 @@ import ru.vadim.quotes.exceptions.ValidationErrorException;
 import ru.vadim.quotes.mappers.QuoteMapper;
 import ru.vadim.quotes.model.Quote;
 import ru.vadim.quotes.repository.QuotesRepository;
-import lombok.AllArgsConstructor;
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
@@ -48,11 +47,11 @@ public class QuoteService {
                 currentQuote.setActual(false); // не сохраняет изменение в бд
                 newQuote.setActual(true);
                 newQuote.setElvl(newQuote.getBid());
-                saveWithCalculateQuoteValue(newQuote, currentQuote);
+                saveWithCalculateElvl(newQuote, currentQuote);
             } else {
                 newQuote.setActual(true);
                 newQuote.setElvl(newQuote.getBid());
-                saveWithCalculateQuoteValue(newQuote);
+                saveWithCalculateElvl(newQuote);
             }
 
         } else {
@@ -60,12 +59,12 @@ public class QuoteService {
         }
     }
 
-    public void saveWithCalculateQuoteValue(Quote newQuote, Quote currentQuote) {
-        if (isAskOfNewQuoteMoreThanCurrentQuoteValueOrNewBidIsNull(newQuote, currentQuote)) {
+    public void saveWithCalculateElvl(Quote newQuote, Quote currentQuote) {
+        if (isAskOfNewQuoteMoreThanCurrentElvl(newQuote, currentQuote)) {
             newQuote.setElvl(currentQuote.getAsk());
             repository.save(newQuote);
             return;
-        } else if (isBidOfNewQuoteMoreThanQuoteValueOfCurrentQuoteOrQuoteValueOfNewQuoteIsNull(newQuote, currentQuote)) {
+        } else if (isBidOfNewQuoteMoreThanElvlOfCurrent(newQuote, currentQuote)) {
             newQuote.setElvl(currentQuote.getBid());
             repository.save(newQuote);
             return;
@@ -73,12 +72,12 @@ public class QuoteService {
         repository.save(newQuote);
     }
 
-    public void saveWithCalculateQuoteValue(Quote newQuote) {
+    public void saveWithCalculateElvl(Quote newQuote) {
         if (isAskMoreThanBidOrBidIsNullOrZero(newQuote)) {
             newQuote.setElvl(newQuote.getAsk());
             repository.save(newQuote);
             return;
-        } else if (isBidMoreThanQuoteValueOrQuoteValueIsNullOrZero(newQuote)) {
+        } else if (isBidMoreThanElvlOrElvlIsNull(newQuote)) {
             newQuote.setElvl(newQuote.getBid());
             repository.save(newQuote);
             return;
@@ -94,7 +93,7 @@ public class QuoteService {
         }
         else {return false;}
     }
-    public boolean isBidMoreThanQuoteValueOrQuoteValueIsNullOrZero(Quote newQuote) {
+    public boolean isBidMoreThanElvlOrElvlIsNull(Quote newQuote) {
         if ((newQuote.getBid().compareTo(newQuote.getElvl()) > 0)
                 || newQuote.getElvl() == null
                 || newQuote.getElvl().compareTo(new BigDecimal(0)) == 0) {
@@ -104,7 +103,7 @@ public class QuoteService {
         }
     }
 
-    public boolean isAskOfNewQuoteMoreThanCurrentQuoteValueOrNewBidIsNull(Quote newQuote, Quote currentQuote) {
+    public boolean isAskOfNewQuoteMoreThanCurrentElvl(Quote newQuote, Quote currentQuote) {
         if ((newQuote.getAsk().compareTo(currentQuote.getElvl()) < 0)
                 || newQuote.getBid() == null) {
             return true;
@@ -113,7 +112,7 @@ public class QuoteService {
         }
     }
     //
-    public boolean isBidOfNewQuoteMoreThanQuoteValueOfCurrentQuoteOrQuoteValueOfNewQuoteIsNull(Quote newQuote, Quote currentQuote){
+    public boolean isBidOfNewQuoteMoreThanElvlOfCurrent(Quote newQuote, Quote currentQuote){
         if ((newQuote.getBid().compareTo(currentQuote.getElvl()) > 0)
                 || newQuote.getElvl() == null) {
             return true;
